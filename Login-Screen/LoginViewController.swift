@@ -71,6 +71,10 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
     var keyBoardShowing = false
     var createAccountPage = false
     
+    ///////////////////////////////////////////////////////////////////
+    //                          INITIAL SET-UP
+    ///////////////////////////////////////////////////////////////////
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         gradiante()
@@ -134,11 +138,30 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
         NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(SCLAlertView.keyboardWillHide(_:)), name:UIKeyboardWillHideNotification, object: nil);
     }
     
+    override func viewDidAppear(animated: Bool) {
+        super.viewDidAppear(animated)
+        
+        ref.observeAuthEventWithBlock { (authData) -> Void in
+            if authData != nil {
+                self.performSegueWithIdentifier("loginSuccessfulSegue", sender: nil)
+            }
+        }
+    }
+    
     override func viewDidDisappear(animated: Bool) {
         super.viewDidDisappear(animated)
         NSNotificationCenter.defaultCenter().removeObserver(UIKeyboardWillShowNotification)
         NSNotificationCenter.defaultCenter().removeObserver(UIKeyboardWillHideNotification)
     }
+    
+    override func prefersStatusBarHidden() -> Bool {
+        return true
+    }
+    
+    
+    ///////////////////////////////////////////////////////////////////
+    //                          ANIMATIONS
+    ///////////////////////////////////////////////////////////////////
     
     func keyboardWillShow(notification: NSNotification) {
         keyBoardShowing = true
@@ -200,115 +223,6 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
         gradientLayer.endPoint = CGPoint(x: 0, y: 1)
     }
     
-    func delay(delay:Double, closure:()->()) {
-        dispatch_after(
-            dispatch_time(
-                DISPATCH_TIME_NOW,
-                Int64(delay * Double(NSEC_PER_SEC))
-            ),
-            dispatch_get_main_queue(), closure)
-    }
-
-    override func prefersStatusBarHidden() -> Bool {
-        return true
-    }
-    
-    func textFieldShouldReturn(textField: UITextField) -> Bool {
-        if textField == emailTextField {
-            passwordTextField.becomeFirstResponder()
-        } else if textField == passwordTextField {
-            login()
-            textField.resignFirstResponder()
-        } else if textField == CAemailTextField {
-            CApasswordTextField.becomeFirstResponder()
-        } else if textField == CApasswordTextField {
-            createAccount()
-            textField.resignFirstResponder()
-        }
-        return true
-    }
-    
-    override func viewDidAppear(animated: Bool) {
-        super.viewDidAppear(animated)
-        
-        ref.observeAuthEventWithBlock { (authData) -> Void in
-            if authData != nil {
-                self.performSegueWithIdentifier("loginSuccessfulSegue", sender: nil)
-            }
-        }
-    }
-    
-    @IBAction func loginAction(sender: AnyObject) {
-        login()
-    }
-    
-    func animateDropDown() {
-        UIView.animateWithDuration(0.3, delay: 0, options: UIViewAnimationOptions.TransitionNone, animations: {
-            self.dropDownAlert.hidden = false
-            self.dropDownAlertConstraint.constant = 0
-            self.view.layoutIfNeeded()
-        }, completion: { (finished: Bool) -> Void in
-            UIView.animateWithDuration(0.5, delay: 1.0, options: UIViewAnimationOptions.TransitionNone, animations: {
-                self.dropDownAlertConstraint.constant = -60
-                self.view.layoutIfNeeded()
-            }, completion: { (finished: Bool) -> Void in
-                self.dropDownAlert.hidden = true
-            })
-        })
-    }
-
-    func login() {
-        let email = self.emailTextField.text
-        let password = self.passwordTextField.text
-        if email != "" && password != "" {
-            ref.authUser(email, password: password, withCompletionBlock: { (error, authData) -> Void in
-                if error != nil {
-                    switch (error.code) {
-                    case -5:
-                        self.dropDownAlert.text = "Invalid Email Address"
-                        self.animateDropDown()
-                    case -6:
-                        self.dropDownAlert.text = "Invalid Password"
-                        self.animateDropDown()
-                    default:
-                        self.dropDownAlert.text = "Error logging in"
-                        self.animateDropDown()
-                    }
-                } else {
-                    NSUserDefaults.standardUserDefaults().setValue(authData.uid, forKey: "uid")
-                    print("Logged In")
-                }
-            })
-        } else {
-            self.dropDownAlert.text = "Invalid Parameters"
-            animateDropDown()
-        }
-    }
-    
-    @IBAction func facebookLoginAction(sender: AnyObject) {
-        let facebookLogin = FBSDKLoginManager()
-        facebookLogin.logInWithReadPermissions(["email"], fromViewController: nil, handler: {
-            (facebookResult, facebookError) -> Void in
-            if facebookError != nil {
-                print("Facebook login failed. Error \(facebookError)")
-            } else if facebookResult.isCancelled {
-                print("Facebook login was cancelled.")
-            } else {
-                let accessToken = FBSDKAccessToken.currentAccessToken().tokenString
-                ref.authWithOAuthProvider("facebook", token: accessToken,
-                    withCompletionBlock: { error, authData in
-                        if error != nil {
-                            self.dropDownAlert.text = "Error logging in"
-                            self.animateDropDown()
-                            print("Facebook login failed. \(error)")
-                        } else {
-                            print("Logged in with Facebook! \(authData)")
-                        }
-                })
-            }
-        })
-    }
-    
     @IBAction func createAccount(sender: AnyObject) {
         emailTextField.text = ""
         passwordTextField.text = ""
@@ -320,7 +234,7 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
             self.CAlabelCenterConstraint.constant -= self.view.bounds.width
             self.loginLabelCenterConstraint.constant -= self.view.bounds.width
             self.view.layoutIfNeeded()
-        }, completion: nil)
+            }, completion: nil)
         
         UIView.animateWithDuration(0.75, delay: 0.1, options: UIViewAnimationOptions.TransitionNone, animations: {
             self.emailLeadingConstraint.constant -= self.view.bounds.width
@@ -331,7 +245,7 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
             self.CAemailTrailingConstraint.constant += self.view.bounds.width
             self.CAemailCenterConstraint.active = true
             self.view.layoutIfNeeded()
-        }, completion: nil)
+            }, completion: nil)
         
         UIView.animateWithDuration(0.75, delay: 0.2, options: UIViewAnimationOptions.TransitionNone, animations: {
             self.passwordLeadingConstraint.constant -= self.view.bounds.width
@@ -342,7 +256,7 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
             self.CApasswordTrailingConstraint.constant += self.view.bounds.width
             self.CApasswordCenterConstraint.active = true
             self.view.layoutIfNeeded()
-        }, completion: nil)
+            }, completion: nil)
         
         UIView.animateWithDuration(0.75, delay: 0.4, options: UIViewAnimationOptions.TransitionNone, animations: {
             self.loginLeadingConstraint.constant -= self.view.bounds.width
@@ -355,12 +269,12 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
             self.CAsubmitTrailingConstraint.constant += self.view.bounds.width
             self.CAsubmitCenterConstraint.active = true
             self.view.layoutIfNeeded()
-        }, completion: nil)
+            }, completion: nil)
         
         UIView.animateWithDuration(0.75, delay: 0.5, options: UIViewAnimationOptions.TransitionNone, animations: {
             self.detailsCenterConstraint.constant -= self.view.bounds.width
             self.view.layoutIfNeeded()
-        }, completion: nil)
+            }, completion: nil)
         
         UIView.animateWithDuration(0.75, delay: 0.6, options: UIViewAnimationOptions.TransitionNone, animations: {
             self.orCenterConstraint.constant -= self.view.bounds.width
@@ -372,14 +286,9 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
             self.dontAccountCenterConstraint.constant -= self.view.bounds.width
             self.alreadyAccountCenterConstraint.constant -= self.view.bounds.width
             self.view.layoutIfNeeded()
-        }, completion: nil)
+            }, completion: nil)
     }
-    
-    @IBAction func submitAction(sender: AnyObject) {
-        createAccountPage = true
-        createAccount()
-    }
-    
+
     @IBAction func cancelAction(sender: AnyObject) {
         CAemailTextField.text = ""
         CApasswordTextField.text = ""
@@ -391,7 +300,7 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
             self.CAlabelCenterConstraint.constant += self.view.bounds.width
             self.loginLabelCenterConstraint.constant += self.view.bounds.width
             self.view.layoutIfNeeded()
-        }, completion: nil)
+            }, completion: nil)
         
         UIView.animateWithDuration(0.75, delay: 0.1, options: UIViewAnimationOptions.TransitionNone, animations: {
             self.emailLeadingConstraint.constant += self.view.bounds.width
@@ -402,7 +311,7 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
             self.CAemailTrailingConstraint.constant -= self.view.bounds.width
             self.CAemailCenterConstraint.active = false
             self.view.layoutIfNeeded()
-        }, completion: nil)
+            }, completion: nil)
         
         UIView.animateWithDuration(0.75, delay: 0.2, options: UIViewAnimationOptions.TransitionNone, animations: {
             self.passwordLeadingConstraint.constant += self.view.bounds.width
@@ -446,6 +355,114 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
             }, completion: nil)
     }
     
+    ///////////////////////////////////////////////////////////////////
+    //                          BUTTON ACTIONS
+    ///////////////////////////////////////////////////////////////////
+    
+    @IBAction func loginAction(sender: AnyObject) {
+        login()
+    }
+    
+    @IBAction func facebookLoginAction(sender: AnyObject) {
+        let facebookLogin = FBSDKLoginManager()
+        facebookLogin.logInWithReadPermissions(["email"], fromViewController: nil, handler: {
+            (facebookResult, facebookError) -> Void in
+            if facebookError != nil {
+                print("Facebook login failed. Error \(facebookError)")
+            } else if facebookResult.isCancelled {
+                print("Facebook login was cancelled.")
+            } else {
+                let accessToken = FBSDKAccessToken.currentAccessToken().tokenString
+                ref.authWithOAuthProvider("facebook", token: accessToken,
+                    withCompletionBlock: { error, authData in
+                        if error != nil {
+                            self.dropDownAlert.text = "Error logging in"
+                            self.animateDropDown()
+                            print("Facebook login failed. \(error)")
+                        } else {
+                            print("Logged in with Facebook! \(authData)")
+                        }
+                })
+            }
+        })
+    }
+    
+    
+    @IBAction func submitAction(sender: AnyObject) {
+        createAccountPage = true
+        createAccount()
+    }
+    
+    @IBAction func forgotPasswordAction(sender: AnyObject) {
+        if keyBoardShowing {
+            dismissKeyboard()
+        }
+        let color = UIColor(red: 59/255, green: 89/255, blue: 152/255, alpha: 1)
+        let alertView = SCLAlertView()
+        let alertViewIcon = UIImage(named: "Mail.png")
+        alertView.addTextField("Email")
+        alertView.addButton("Email", target: alertView, selector: #selector(SCLAlertView.checkTextField))
+        alertView.showTitle("Reset Password", subTitle: "Enter in your email address", completeText: "Cancel", colorStyle: color, circleIconImage: alertViewIcon)
+    }
+    
+    
+    ///////////////////////////////////////////////////////////////////
+    //                          HELPER FUNCTIONS
+    ///////////////////////////////////////////////////////////////////
+    
+    
+    func delay(delay:Double, closure:()->()) {
+        dispatch_after(
+            dispatch_time(
+                DISPATCH_TIME_NOW,
+                Int64(delay * Double(NSEC_PER_SEC))
+            ),
+            dispatch_get_main_queue(), closure)
+    }
+    
+    func textFieldShouldReturn(textField: UITextField) -> Bool {
+        if textField == emailTextField {
+            passwordTextField.becomeFirstResponder()
+        } else if textField == passwordTextField {
+            login()
+            textField.resignFirstResponder()
+        } else if textField == CAemailTextField {
+            CApasswordTextField.becomeFirstResponder()
+        } else if textField == CApasswordTextField {
+            createAccount()
+            textField.resignFirstResponder()
+        }
+        return true
+    }
+    
+    func login() {
+        let email = self.emailTextField.text
+        let password = self.passwordTextField.text
+        if email != "" && password != "" {
+            ref.authUser(email, password: password, withCompletionBlock: { (error, authData) -> Void in
+                if error != nil {
+                    switch (error.code) {
+                    case -5:
+                        self.dropDownAlert.text = "Invalid Email Address"
+                        self.animateDropDown()
+                    case -6:
+                        self.dropDownAlert.text = "Invalid Password"
+                        self.animateDropDown()
+                    default:
+                        self.dropDownAlert.text = "Error logging in"
+                        self.animateDropDown()
+                    }
+                } else {
+                    NSUserDefaults.standardUserDefaults().setValue(authData.uid, forKey: "uid")
+                    print("Logged In")
+                }
+            })
+        } else {
+            self.dropDownAlert.text = "Invalid Parameters"
+            animateDropDown()
+        }
+    }
+
     func createAccount() {
         let email = self.CAemailTextField.text
         let password = self.CApasswordTextField.text
@@ -478,15 +495,18 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
         }
     }
     
-    @IBAction func forgotPasswordAction(sender: AnyObject) {
-        if keyBoardShowing {
-            dismissKeyboard()
-        }
-        let color = UIColor(red: 59/255, green: 89/255, blue: 152/255, alpha: 1)
-        let alertView = SCLAlertView()
-        let alertViewIcon = UIImage(named: "Mail.png")
-        alertView.addTextField("Email")
-        alertView.addButton("Email", target: alertView, selector: #selector(SCLAlertView.checkTextField))
-        alertView.showTitle("Reset Password", subTitle: "Enter in your email address", completeText: "Cancel", colorStyle: color, circleIconImage: alertViewIcon)
+    func animateDropDown() {
+        UIView.animateWithDuration(0.3, delay: 0, options: UIViewAnimationOptions.TransitionNone, animations: {
+            self.dropDownAlert.hidden = false
+            self.dropDownAlertConstraint.constant = 0
+            self.view.layoutIfNeeded()
+            }, completion: { (finished: Bool) -> Void in
+                UIView.animateWithDuration(0.5, delay: 1.0, options: UIViewAnimationOptions.TransitionNone, animations: {
+                    self.dropDownAlertConstraint.constant = -60
+                    self.view.layoutIfNeeded()
+                    }, completion: { (finished: Bool) -> Void in
+                        self.dropDownAlert.hidden = true
+                })
+        })
     }
 }
