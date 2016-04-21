@@ -2,7 +2,6 @@
 
 ![Demo](http://i.imgur.com/zoma2Ax.gif)				![Demo](http://i.imgur.com/wRd409c.gif)   
 **Please note image quality is reduced significantly for .gif format.**   
-
 **The colors and gradients of the application look much better on Apple devices.**   
 
 ### Description
