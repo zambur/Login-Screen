@@ -1,8 +1,9 @@
 # Login Screen
 
 ![Demo](http://i.imgur.com/zoma2Ax.gif)				![Demo](http://i.imgur.com/wRd409c.gif)   
-Please note image quality is reduced significantly for .gif format.   
-The colors and gradients of the application look much better on Apple devices.
+**Please note image quality is reduced significantly for .gif format.**   
+
+**The colors and gradients of the application look much better on Apple devices.**   
 
 ### Description
 This is a sample login screen to be used inside of a mobile app to easily log users into their account. It has many features and animations that make logging in as easy as possible. The back end and user management is handled with Google’s **Firebase** cloud service provider. This handles all login accounts securely storing passwords as well as making sure each account is unique. Since I built this with the intent of append onto another app it will remember logged in users so if you log in and then close the app it will always remember you on that mobile device until you log out. This login also gives users the ability to login or sign up through Facebook, it is registered as a Facebook application so by simply authorizing this app to use your Facebook information you can log in that way. In case you forget your password, users have the ability to reset their password though an email sent to their accounts respected email address.
