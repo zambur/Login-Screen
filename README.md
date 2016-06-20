@@ -1,6 +1,6 @@
 # Login Screen
 
-![Demo](http://i.imgur.com/zoma2Ax.gif)				![Demo](http://i.imgur.com/wRd409c.gif)   
+![Login](https://github.com/zambur/Login-Screen/blob/master/Examples/LoginExamle.gif)				![Create Account](https://github.com/zambur/Login-Screen/blob/master/Examples/CreateAccountExample.gif)   
 **Please note image quality is reduced significantly for .gif format.**   
 **The colors and gradients of the application look much better on Apple devices.**   
 
